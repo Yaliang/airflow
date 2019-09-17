@@ -874,6 +874,7 @@ def webserver(args):
     num_workers = args.workers or conf.get('webserver', 'workers')
     worker_timeout = (args.worker_timeout or
                       conf.get('webserver', 'web_server_worker_timeout'))
+    keep_alive = conf.get('webserver', 'web_server_keep_alive')
     ssl_cert = args.ssl_cert or conf.get('webserver', 'web_server_ssl_cert')
     ssl_key = args.ssl_key or conf.get('webserver', 'web_server_ssl_key')
     if not ssl_cert and ssl_key:
@@ -908,11 +909,13 @@ def webserver(args):
                 Workers: {num_workers} {workerclass}
                 Host: {hostname}:{port}
                 Timeout: {worker_timeout}
+                KeepAlive: {keep_alive}
                 Logfiles: {access_logfile} {error_logfile}
                 =================================================================\
             '''.format(num_workers=num_workers, workerclass=args.workerclass,
                        hostname=args.hostname, port=args.port,
-                       worker_timeout=worker_timeout, access_logfile=access_logfile,
+                       worker_timeout=worker_timeout, keep_alive=keep_alive,
+                       access_logfile=access_logfile,
                        error_logfile=error_logfile)))
 
         run_args = [
@@ -920,9 +923,11 @@ def webserver(args):
             '-w', str(num_workers),
             '-k', str(args.workerclass),
             '-t', str(worker_timeout),
+            '--keep-alive', str(keep_alive),
             '-b', args.hostname + ':' + str(args.port),
             '-n', 'airflow-webserver',
             '-p', str(pid),
+            '--no-sendfile',
             '-c', 'python:airflow.www.gunicorn_config',
         ]
 
