@@ -266,6 +266,9 @@ class BaseOperator(LoggingMixin):
         email: Optional[str] = None,
         email_on_retry: bool = True,
         email_on_failure: bool = True,
+        slack: Optional[str] = None,
+        slack_on_retry: bool = True,
+        slack_on_failure: bool = True,
         retries: int = 0,
         retry_delay: timedelta = timedelta(seconds=300),
         retry_exponential_backoff: bool = False,
@@ -316,6 +319,9 @@ class BaseOperator(LoggingMixin):
         self.email = email
         self.email_on_retry = email_on_retry
         self.email_on_failure = email_on_failure
+        self.slack = slack
+        self.slack_on_retry = slack_on_retry
+        self.slack_on_failure = slack_on_failure
 
         self.start_date = start_date
         if start_date and not isinstance(start_date, datetime):

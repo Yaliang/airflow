@@ -56,6 +56,7 @@ from airflow.utils.email import send_email
 from airflow.utils.helpers import is_container
 from airflow.utils.log.logging_mixin import LoggingMixin
 from airflow.utils.net import get_hostname
+from airflow.utils.slack import post_slack_message
 from airflow.utils.sqlalchemy import UtcDateTime
 from airflow.utils.state import State
 from airflow.utils.timeout import timeout
@@ -1068,6 +1069,8 @@ class TaskInstance(Base, LoggingMixin):
                 self.log.info('Marking task as UP_FOR_RETRY')
                 if task.email_on_retry and task.email:
                     self.email_alert(error)
+                if task.slack_on_retry and task.slack:
+                    self.slack_alert(error)
             else:
                 self.state = State.FAILED
                 if task.retries:
@@ -1076,8 +1079,11 @@ class TaskInstance(Base, LoggingMixin):
                     self.log.info('Marking task as FAILED.')
                 if task.email_on_failure and task.email:
                     self.email_alert(error)
+                if task.slack_on_failure and task.slack:
+                    self.slack_alert(error)
         except Exception as e2:
-            self.log.error('Failed to send email to: %s', task.email)
+            self.log.error('Failed to send email and/or slack to: %s / %s',
+                           task.email, task.slack)
             self.log.exception(e2)
 
         # Handling callbacks pessimistically
@@ -1296,6 +1302,41 @@ class TaskInstance(Base, LoggingMixin):
         subject = render('subject_template', default_subject)
         html_content = render('html_content_template', default_html_content)
         send_email(self.task.email, subject, html_content)
+
+    def slack_alert(self, exception):
+        jinja_context = self.get_template_context()
+        # This function is called after changing the state
+        # from State.RUNNING so need to subtract 1 from self.try_number.
+        jinja_context.update(dict(
+            exception=exception,
+            try_number=self.try_number - 1,
+            max_tries=self.max_tries))
+
+        jinja_env = self.task.get_template_env()
+
+        # For reporting purposes, we report based on 1-indexed,
+        # not 0-indexed lists (i.e. Try 1 instead of
+        # Try 0 for the first attempt).
+        default_html_content = (
+            ':red_circle: Airflow Alert'
+            'Try {{try_number}} out of {{max_tries + 1}}'
+            '*Owner*: <@{{task.owner}}>'
+            '*Task*: {{ti.task_id}}'
+            '*Dag*: {{ti.dag_id}}'
+            '*Execution Time*: {{execution_date}}'
+            '*Log*: {{ti.log_url}}'
+        )
+
+        def render(key, content):
+            if configuration.has_option('slack', key):
+                path = configuration.get('slack', key)
+                with open(path) as file:
+                    content = file.read()
+
+            return jinja_env.from_string(content).render(**jinja_context)
+
+        text = render('text_template', default_html_content)
+        post_slack_message(self.task.slack, text)
 
     def set_duration(self):
         if self.end_date and self.start_date:
