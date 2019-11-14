@@ -31,13 +31,14 @@ def post_slack_message(channel, text, username='Airflow',
                        attachments=None):
     token = configuration.conf.get('slack', 'TOKEN')
     sc = SlackClient(token)
-    rc = sc.api_call('chat.postMessage', {
-            'channel': channel,
-            'username': username,
-            'text': text,
-            'icon_url': icon_url,
-            'attachments': json.dumps(attachments),
-        })
+    kparam = {
+        'channel': channel,
+        'username': username,
+        'text': text,
+        'icon_url': icon_url,
+        'attachments': json.dumps(attachments),
+    }
+    rc = sc.api_call('chat.postMessage', **kparam)
 
     if not rc['ok']:
         msg = "Slack API call failed ({})".format(rc['error'])
