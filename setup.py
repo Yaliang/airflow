@@ -272,6 +272,7 @@ virtualenv = ['virtualenv']
 webhdfs = ['hdfs[dataframe,avro,kerberos]>=2.0.4']
 winrm = ['pywinrm==0.2.2']
 zendesk = ['zdesk']
+weride = ['utm>=0.5.0', 'coord-convert>=0.2.1']
 
 all_dbs = postgres + mysql + hive + mssql + hdfs + vertica + cloudant + druid + pinot \
     + cassandra + mongo
@@ -309,7 +310,8 @@ devel_all = (sendgrid + devel + all_dbs + doc + samba + slack + crypto + oracle 
              docker + ssh + kubernetes + celery + redis + gcp + grpc +
              datadog + zendesk + jdbc + ldap + kerberos + password + webhdfs + jenkins +
              druid + pinot + segment + snowflake + elasticsearch +
-             atlas + azure + aws + salesforce + cgroups + papermill + virtualenv)
+             atlas + azure + aws + salesforce + cgroups + papermill + virtualenv +
+             weride)
 
 # Snakebite & Google Cloud Dataflow are not Python 3 compatible :'(
 if PY3:
@@ -433,6 +435,7 @@ def do_setup():
             'virtualenv': virtualenv,
             'webhdfs': webhdfs,
             'winrm': winrm,
+            'weride': weride,
         },
         classifiers=[
             'Development Status :: 5 - Production/Stable',

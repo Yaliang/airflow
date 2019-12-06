@@ -1318,12 +1318,12 @@ class TaskInstance(Base, LoggingMixin):
         # not 0-indexed lists (i.e. Try 1 instead of
         # Try 0 for the first attempt).
         default_html_content = (
-            ':red_circle: Airflow Alert'
-            'Try {{try_number}} out of {{max_tries + 1}}'
-            '*Owner*: <@{{task.owner}}>'
-            '*Task*: {{ti.task_id}}'
-            '*Dag*: {{ti.dag_id}}'
-            '*Execution Time*: {{execution_date}}'
+            ':red_circle: Airflow Alert | '
+            'Try {{try_number}} out of {{max_tries + 1}} | '
+            '*Owner*: <@{{task.owner}}> | '
+            '*Task*: {{ti.task_id}} | '
+            '*Dag*: {{ti.dag_id}} | '
+            '*Execution Time*: {{execution_date}} | '
             '*Log*: {{ti.log_url}}'
         )
 
